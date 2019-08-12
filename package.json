@@ -1,0 +1,11 @@
+{
+  "name": "github-merger",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "author": "Joe Haddad <timer150@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "@octokit/rest": "16.28.7"
+  }
+}
