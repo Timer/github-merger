@@ -94,10 +94,11 @@ async function main() {
     )
 
     const didAMerge = await mergeSinglePullRequest()
-    if (!didAMerge) {
-      await sleep(1000 * 60) // one minute
+    if (didAMerge) {
+      return true
     }
 
+    await sleep(1000 * 60) // one minute
     await updatePullRequests()
     console.log()
   }
