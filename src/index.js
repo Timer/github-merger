@@ -18,7 +18,7 @@ async function main() {
 
   let readyForMerge = (await Promise.all(
     all.data
-      .filter(k => k.labels.find(k => k.name === 'automerge'))
+      .filter(k => k.labels.find(k => k.name === 'ready to land'))
       .map(k => k.number)
       .map(number =>
         octokit.pulls.get({
