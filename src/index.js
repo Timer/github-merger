@@ -16,9 +16,9 @@ async function main() {
     state: 'open',
   })
 
-  let lgtm = (await Promise.all(
+  let readyForMerge = (await Promise.all(
     all.data
-      .filter(k => k.labels.find(k => k.name === 'lgtm'))
+      .filter(k => k.labels.find(k => k.name === 'automerge'))
       .map(k => k.number)
       .map(number =>
         octokit.pulls.get({
@@ -30,12 +30,12 @@ async function main() {
     .map(pr => pr.data)
     .filter(pr => pr.maintainer_can_modify)
 
-  if (!lgtm.length) {
+  if (!readyForMerge.length) {
     return false
   }
 
   async function mergeSinglePullRequest() {
-    const mergeable = lgtm.find(
+    const mergeable = readyForMerge.find(
       pr =>
         pr.mergeable &&
         (pr.mergeable_state === 'clean' || pr.mergeable_state === 'unstable')
@@ -48,12 +48,12 @@ async function main() {
         merge_method: 'squash',
       })
 
-      lgtm = lgtm.filter(pr => pr.number !== mergeable.number)
+      readyForMerge = readyForMerge.filter(pr => pr.number !== mergeable.number)
 
       await sleep(5000)
       return true
     } else {
-      lgtm.forEach(pr => {
+      readyForMerge.forEach(pr => {
         console.log(
           `PR ${pr.number} (${pr.title}) state / mergeable: ${
             pr.mergeable
@@ -64,8 +64,8 @@ async function main() {
   }
 
   async function updatePullRequests() {
-    lgtm = await Promise.all(
-      lgtm.map(pr =>
+    readyForMerge = await Promise.all(
+      readyForMerge.map(pr =>
         octokit.pulls
           .get({
             ...REPOSITORY_SETTINGS,
@@ -76,13 +76,15 @@ async function main() {
     )
   }
 
-  while (lgtm.length) {
+  while (readyForMerge.length) {
     console.log(
-      `remaining prs: ${lgtm.map(pr => pr.number).join(', ')} at ${new Date()}`
+      `remaining prs: ${readyForMerge
+        .map(pr => pr.number)
+        .join(', ')} at ${new Date()}`
     )
 
     await Promise.all(
-      lgtm
+      readyForMerge
         .filter(pr => pr.mergeable_state === 'behind')
         .map(pr => {
           console.log(`Updating branch for PR: ${pr.number}`)
