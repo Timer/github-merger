@@ -76,7 +76,8 @@ async function main() {
     )
   }
 
-  while (readyForMerge.length) {
+  let minutes = 10
+  while (readyForMerge.length && minutes-- >= 0) {
     console.log(
       `remaining prs: ${readyForMerge
         .map(pr => pr.number)
