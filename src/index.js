@@ -16,6 +16,10 @@ async function main() {
     state: 'open',
   });
 
+  const baseSha = await octokit.repos
+    .getBranch({ ...REPOSITORY_SETTINGS, branch: 'canary' })
+    .then(res => res.data.commit.sha);
+
   let readyForMerge = (
     await Promise.all(
       all.data
@@ -39,6 +43,7 @@ async function main() {
   async function mergeSinglePullRequest() {
     const mergeable = readyForMerge.find(
       pr =>
+        pr.base.sha === baseSha &&
         pr.mergeable &&
         (pr.mergeable_state === 'clean' || pr.mergeable_state === 'unstable')
     );
@@ -88,7 +93,9 @@ async function main() {
 
     await Promise.all(
       readyForMerge
-        .filter(pr => pr.mergeable_state === 'behind')
+        .filter(
+          pr => pr.mergeable_state === 'behind' || pr.base.sha !== baseSha
+        )
         .map(pr => {
           console.log(`Updating branch for PR: ${pr.number}`);
           return octokit.pulls.updateBranch({
